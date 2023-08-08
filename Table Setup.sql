@@ -84,6 +84,32 @@ GO
 -------------------------
 
 --- User ---
+CREATE OR ALTER PROCEDURE findUserByLogin 
+	-- Add the parameters for the stored procedure here
+	@value nvarchar(max),
+	@statusCode int OUTPUT,
+	@statusMessage TEXT OUTPUT
+AS
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+
+    -- Insert statements for procedure here
+	IF EXISTS (SELECT * FROM [user] WHERE [username] = @value OR [email] = @value)
+		BEGIN
+			SELECT * FROM [user] WHERE [username] = @value OR [email] = @value
+			SET @statusCode = 1
+			SET @statusMessage = 'Found user'
+		END
+	ELSE
+		BEGIN
+			SET @statusCode = 0
+			SET @statusMessage = 'Wrong email or username'
+		END
+END
+GO
+
 CREATE OR ALTER PROCEDURE getUser 
 	-- Add the parameters for the stored procedure here
 	@id int
@@ -118,7 +144,17 @@ BEGIN
     -- Insert statements for procedure here
 	DECLARE @currentId int
 
-	IF ISNULL(@id, 0) <> 0
+	IF (LEN(TRIM(@username)) = 0)
+		BEGIN
+			SET @statusCode = 0
+			SET @statusMessage = 'Username cannot be empty'
+		END
+	ELSE IF (@Email LIKE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}')
+		BEGIN
+			SET @statusCode = 0
+			SET @statusMessage = 'Invalid email'
+		END
+	ELSE IF ISNULL(@id, 0) <> 0
 		BEGIN
 			UPDATE [user] 
 			SET 
@@ -219,7 +255,12 @@ BEGIN
     -- Insert statements for procedure here
 	DECLARE @currentId int
 
-	IF ISNULL(@id, 0) <> 0
+	IF(LEN(TRIM(@name)) = 0)
+		BEGIN
+			SET @statusCode = 0
+			SET @statusMessage = 'Name cannot be empty'
+		END
+	ELSE IF ISNULL(@id, 0) <> 0
 		BEGIN
 			UPDATE [list] 
 			SET 
@@ -321,7 +362,12 @@ BEGIN
     -- Insert statements for procedure here
 	DECLARE @currentId int
 
-	IF ISNULL(@id, 0) <> 0
+	IF(LEN(TRIM(@name)) = 0)
+		BEGIN
+			SET @statusCode = 0
+			SET @statusMessage = 'Name cannot be empty'
+		END
+	ELSE IF ISNULL(@id, 0) <> 0
 		BEGIN
 			UPDATE [item] 
 			SET 
